@@ -253,21 +253,7 @@ func openDBConnection(driverName, dataSourceName string) (*gorm.DB, error) {
 }
 
 func (a *Adapter) createDatabase() error {
-	var err error
-	db, err := openDBConnection(a.driverName, a.dataSourceName)
-	if err != nil {
-		return err
-	}
-	if a.driverName == "postgres" {
-		if err = db.Exec("CREATE DATABASE " + a.databaseName).Error; err != nil {
-			// 42P04 is	duplicate_database
-			if strings.Contains(fmt.Sprintf("%s", err), "42P04") {
-				return nil
-			}
-		}
-	} else if a.driverName != "sqlite3" {
-		err = db.Exec("CREATE DATABASE IF NOT EXISTS " + a.databaseName).Error
-	}
+	_, err := openDBConnection(a.driverName, a.dataSourceName)
 	if err != nil {
 		return err
 	}
@@ -287,13 +273,8 @@ func (a *Adapter) Open() error {
 		if err = a.createDatabase(); err != nil {
 			return err
 		}
-		if a.driverName == "postgres" {
-			db, err = openDBConnection(a.driverName, a.dataSourceName+" dbname="+a.databaseName)
-		} else if a.driverName == "sqlite3" {
-			db, err = openDBConnection(a.driverName, a.dataSourceName)
-		} else {
-			db, err = openDBConnection(a.driverName, a.dataSourceName+a.databaseName)
-		}
+		db, err = openDBConnection(a.driverName, a.dataSourceName+a.databaseName)
+
 		if err != nil {
 			return err
 		}
